@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabz Activity Feed - Popout</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            --accent-gradient: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.2);
+            --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-heavy: 0 12px 40px rgba(0, 0, 0, 0.4);
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 20px;
+            --spacing-xl: 24px;
+            --spacing-2xl: 40px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-full: 50%;
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: var(--spacing-md);
+        }
+
+        .background-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image:
+                radial-gradient(circle at 25% 25%, #ffffff 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, #ffffff 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        .activity-header {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .activity-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: var(--spacing-xs);
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .activity-header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .status-indicator {
+            position: fixed;
+            top: var(--spacing-sm);
+            right: var(--spacing-sm);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 11px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .status-indicator.connected {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.3) 0%, rgba(0, 255, 136, 0.1) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .status-indicator.disconnected {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(255, 107, 107, 0.1) 100%);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .status-indicator.connecting {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.1) 100%);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            animation: statusPulse 1.5s ease-in-out infinite;
+        }
+
+        .status-indicator.setup {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.1) 100%);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-light);
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .control-btn.mark-new {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.1) 100%);
+        }
+
+        .control-btn.mark-new.active {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.5) 0%, rgba(255, 193, 7, 0.3) 100%);
+        }
+
+        .control-btn.mute {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(255, 107, 107, 0.1) 100%);
+        }
+
+        .control-btn.mute.active {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.5) 0%, rgba(255, 107, 107, 0.3) 100%);
+        }
+
+        .activity-feed {
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
+            padding-right: var(--spacing-xs);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .activity-feed::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .activity-feed::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .activity-feed::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+        }
+
+        .activity-item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            margin-bottom: var(--spacing-sm);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-normal);
+            position: relative;
+            box-shadow: var(--shadow-light);
+        }
+
+        .activity-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .activity-item.is-new::after {
+            content: 'NEW';
+            position: absolute;
+            top: var(--spacing-xs);
+            left: var(--spacing-xs);
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 4px;
+            border-radius: 3px;
+            z-index: 2;
+        }
+
+        .activity-item.donation { border-left: 3px solid #FFD700; }
+        .activity-item.subscription { border-left: 3px solid #9146FF; }
+        .activity-item.follow { border-left: 3px solid #00FF88; }
+        .activity-item.cheer { border-left: 3px solid #9146FF; }
+        .activity-item.raid { border-left: 3px solid #FF6B6B; }
+        .activity-item.host { border-left: 3px solid #FFA500; }
+
+        .activity-type {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 10px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+            font-weight: 600;
+        }
+
+        .activity-icon {
+            width: 14px;
+            height: 14px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7px;
+        }
+
+        .activity-icon.donation { background: linear-gradient(45deg, #FFD700, #FFA500); color: #000; }
+        .activity-icon.subscription { background: linear-gradient(45deg, #9146FF, #6B46C1); color: #fff; }
+        .activity-icon.follow { background: linear-gradient(45deg, #00FF88, #00D4AA); color: #000; }
+        .activity-icon.cheer { background: linear-gradient(45deg, #9146FF, #6B46C1); color: #fff; }
+        .activity-icon.raid { background: linear-gradient(45deg, #FF6B6B, #FF5252); color: #fff; }
+        .activity-icon.host { background: linear-gradient(45deg, #FFA500, #FF8C00); color: #fff; }
+
+        .activity-user {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: var(--spacing-xs);
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .activity-message {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+            line-height: 1.3;
+        }
+
+        .activity-amount {
+            font-size: 16px;
+            font-weight: 700;
+            color: #FFD700;
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+        }
+
+        .activity-amount.raid-viewers {
+            font-size: 20px;
+            color: #FF6B6B;
+            text-shadow: 0 0 12px rgba(255, 107, 107, 0.5);
+        }
+
+        .activity-time {
+            position: absolute;
+            top: var(--spacing-sm);
+            right: var(--spacing-sm);
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .last-update {
+            position: fixed;
+            bottom: var(--spacing-sm);
+            right: var(--spacing-sm);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-sm);
+            padding: 2px 6px;
+            font-size: 9px;
+            color: var(--text-muted);
+            z-index: 100;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-xl);
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 32px;
+            margin-bottom: var(--spacing-sm);
+            opacity: 0.5;
+        }
+
+        .setup-warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+        }
+
+        .setup-warning h3 {
+            color: #ffc107;
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .setup-warning p {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+            font-size: 14px;
+        }
+
+        .missing-items {
+            color: var(--warning-color);
+            font-weight: 600;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .setup-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm) var(--spacing-lg);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+
+        .setup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.01); }
+        }
+
+        .activity-item.new {
+            animation: slideInUp 0.4s ease-out, pulse 0.2s ease-out 0.4s;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .made-by {
+            position: fixed;
+            bottom: var(--spacing-sm);
+            left: var(--spacing-sm);
+            font-size: 11px;
+            color: var(--text-muted);
+            opacity: 0.7;
+            transition: opacity var(--transition-normal);
+            z-index: 50;
+        }
+
+        .made-by:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <!-- Made by signature -->
+    <div class="made-by">Made by @t4bzzz_</div>
+    
+    <div class="status-indicator connecting" id="status">Connecting...</div>
+    
+    <div class="last-update" id="lastUpdate">--:--:--</div>
+    
+    <div class="activity-header">
+        <h1>Activity Feed</h1>
+        <p id="channelDisplay">Live Stream</p>
+    </div>
+
+    <div id="setupWarning" class="setup-warning" style="display: none;">
+        <h3><i class="fas fa-exclamation-triangle"></i> Setup Required</h3>
+        <p>Please configure your StreamElements settings first.</p>
+        <p class="missing-items" id="missingItems">Missing: StreamElements token and channel name</p>
+        <p>Complete the 2-minute setup process to use this activity feed.</p>
+        <a href="index.html" target="_parent" class="setup-btn">
+            <i class="fas fa-arrow-left"></i>
+            Back to Setup
+        </a>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn mark-new" onclick="toggleMarkNew()" id="markNewBtn">
+            <i class="fas fa-flag"></i> Mark New
+        </button>
+        <button class="control-btn mute" onclick="toggleMute()" id="muteBtn">
+            <i class="fas fa-volume-up"></i> Sound
+        </button>
+        <button class="control-btn" onclick="clearFeed()">
+            <i class="fas fa-trash"></i> Clear
+        </button>
+    </div>
+
+    <div class="activity-feed" id="activityFeed">
+        <div class="empty-state">
+            <i class="fas fa-coffee"></i>
+            <p>Waiting for stream activities...</p>
+            <small>StreamElements events</small>
+        </div>
+    </div>
+
+    <script>
+        let CONFIG = {
+            streamElementsToken: '',
+            twitchChannel: '',
+            maxActivities: 50,
+            autoReconnect: true,
+            reconnectDelay: 2000,
+            maxReconnectAttempts: 15
+        };
+
+        let socket = null;
+        let isConnecting = false;
+        let reconnectAttempts = 0;
+        let lastUpdateTime = null;
+        let markingNewMode = false;
+        let newActivities = [];
+        let lastEventId = null;
+        let heartbeatInterval = null;
+        let isMuted = false;
+        
+        const activityFeed = document.getElementById('activityFeed');
+        const statusIndicator = document.getElementById('status');
+        const lastUpdateIndicator = document.getElementById('lastUpdate');
+        const markNewBtn = document.getElementById('markNewBtn');
+        const setupWarning = document.getElementById('setupWarning');
+        const channelDisplay = document.getElementById('channelDisplay');
+        const muteBtn = document.getElementById('muteBtn');
+
+        // Cookie utilities
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function loadConfiguration() {
+            const token = getCookie('streamElementsToken');
+            const channel = getCookie('twitchChannel');
+
+            let missingItems = [];
+            if (!token) missingItems.push('StreamElements token');
+            if (!channel) missingItems.push('channel name');
+
+            if (missingItems.length > 0) {
+                document.getElementById('missingItems').textContent = `Missing: ${missingItems.join(' and ')}`;
+                showSetupWarning();
+                return false;
+            }
+
+            CONFIG.streamElementsToken = token;
+            CONFIG.twitchChannel = channel;
+            
+            // Load mute status
+            const muteStatus = getCookie('soundMuted');
+            isMuted = muteStatus === 'true';
+            updateMuteButton();
+            
+            // Update channel display
+            channelDisplay.textContent = `Live • ${channel}`;
+            return true;
+        }
+
+        function showSetupWarning() {
+            setupWarning.style.display = 'block';
+            updateStatus('setup', 'Setup Required');
+            
+            // Auto-redirect after 5 seconds if this is a popout window
+            if (window.opener) {
+                setTimeout(() => {
+                    window.close();
+                }, 5000);
+            }
+        }
+
+        function connectToStreamElements() {
+            if (isConnecting) return;
+            
+            if (!CONFIG.streamElementsToken || !CONFIG.twitchChannel) {
+                updateStatus('setup', 'No Config');
+                showSetupWarning();
+                return;
+            }
+            
+            isConnecting = true;
+            updateStatus('connecting', 'Connecting...');
+
+            try {
+                const socketUrl = `wss://realtime.streamelements.com/socket.io/?EIO=3&transport=websocket&t=${Date.now()}`;
+                socket = new WebSocket(socketUrl);
+                
+                socket.onopen = function() {
+                    console.log('Connected to StreamElements');
+                    isConnecting = false;
+                    reconnectAttempts = 0;
+                    updateStatus('connected', 'Live');
+                    updateLastUpdate();
+                    
+                    clearInterval(heartbeatInterval);
+                    heartbeatInterval = setInterval(() => {
+                        if (socket && socket.readyState === WebSocket.OPEN) {
+                            socket.send('2');
+                        }
+                    }, 25000);
+                    
+                    const authMessage = `420["authenticate",{"method":"jwt","token":"${CONFIG.streamElementsToken}"}]`;
+                    socket.send(authMessage);
+                    
+                    setTimeout(() => {
+                        const joinMessage = `421["join-channel",{"channel":"${CONFIG.twitchChannel}"}]`;
+                        socket.send(joinMessage);
+                    }, 1000);
+                };
+
+                socket.onmessage = function(event) {
+                    const data = event.data;
+                    
+                    if (data.startsWith('42') && data.includes('event')) {
+                        try {
+                            const jsonData = data.substring(2);
+                            const parsedData = JSON.parse(jsonData);
+                            
+                            if (parsedData[0] === 'event' && parsedData[1]) {
+                                handleStreamElementsEvent(parsedData[1]);
+                                updateLastUpdate();
+                            }
+                        } catch (e) {
+                            console.warn('Parse Error:', e);
+                        }
+                    }
+                };
+
+                socket.onclose = function(event) {
+                    console.log('Connection closed:', event.code);
+                    isConnecting = false;
+                    clearInterval(heartbeatInterval);
+                    updateStatus('disconnected', 'Disconnected');
+                    
+                    if (CONFIG.autoReconnect && reconnectAttempts < CONFIG.maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        const delay = Math.min(CONFIG.reconnectDelay * reconnectAttempts, 30000);
+                        setTimeout(connectToStreamElements, delay);
+                    }
+                };
+
+                socket.onerror = function(error) {
+                    console.error('WebSocket Error:', error);
+                    isConnecting = false;
+                    updateStatus('disconnected', 'Error');
+                };
+
+            } catch (error) {
+                console.error('Connection Error:', error);
+                isConnecting = false;
+                updateStatus('setup', 'Setup Error');
+                showSetupWarning();
+            }
+        }
+
+        function handleStreamElementsEvent(event) {
+            console.log('Event:', event);
+            
+            const eventData = event.data || {};
+            
+            const eventId = `${event.type}-${eventData.username || eventData.name}-${eventData.amount || ''}-${Date.now()}`;
+            if (lastEventId === eventId) {
+                console.log('Duplicate ignored');
+                return;
+            }
+            lastEventId = eventId;
+            
+            let activity = null;
+            
+            switch(event.type) {
+                case 'tip':
+                case 'donation':
+                    activity = {
+                        type: 'donation',
+                        user: eventData.username || eventData.name || 'Anonymous',
+                        message: eventData.message || '',
+                        amount: `€${eventData.amount || '0.00'}`,
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'subscriber':
+                case 'resub':
+                    activity = {
+                        type: 'subscription',
+                        user: eventData.username || eventData.name,
+                        message: eventData.message || '',
+                        amount: eventData.tier ? `Tier ${eventData.tier}` : 'Sub',
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'follow':
+                    activity = {
+                        type: 'follow',
+                        user: eventData.username || eventData.name,
+                        message: '',
+                        amount: '',
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'cheer':
+                case 'bits':
+                    activity = {
+                        type: 'cheer',
+                        user: eventData.username || eventData.name,
+                        message: eventData.message || '',
+                        amount: `${eventData.amount || eventData.bits || '?'} Bits`,
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'host':
+                    activity = {
+                        type: 'host',
+                        user: eventData.username || eventData.name,
+                        message: '',
+                        amount: eventData.viewers ? `${eventData.viewers} Viewers` : 'Host',
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'raid':
+                    const viewers = eventData.viewers || eventData.amount || eventData.raiderCount || 0;
+                    activity = {
+                        type: 'raid',
+                        user: eventData.username || eventData.name,
+                        message: '',
+                        amount: `${viewers} Raiders`,
+                        timestamp: new Date(),
+                        isRaid: true
+                    };
+                    break;
+                    
+                default:
+                    console.log('Unknown event:', event.type);
+                    return;
+            }
+            
+            if (activity) {
+                addActivity(activity);
+            }
+        }
+
+        function addActivity(activity) {
+            const emptyState = activityFeed.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const activityElement = createActivityElement(activity);
+            
+            if (markingNewMode) {
+                activityElement.classList.add('is-new');
+                newActivities.unshift(activityElement);
+            }
+            
+            activityFeed.insertBefore(activityElement, activityFeed.firstChild);
+            
+            playNotificationSound(activity.type);
+            
+            while (activityFeed.children.length > CONFIG.maxActivities) {
+                const lastChild = activityFeed.lastChild;
+                const index = newActivities.indexOf(lastChild);
+                if (index > -1) {
+                    newActivities.splice(index, 1);
+                }
+                activityFeed.removeChild(lastChild);
+            }
+        }
+
+        function createActivityElement(activity) {
+            const element = document.createElement('div');
+            element.className = `activity-item ${activity.type} new`;
+            
+            const typeConfig = {
+                'donation': { icon: 'fas fa-euro-sign', text: 'Donation' },
+                'subscription': { icon: 'fas fa-star', text: 'Sub' },
+                'follow': { icon: 'fas fa-heart', text: 'Follow' },
+                'cheer': { icon: 'fas fa-gem', text: 'Cheer' },
+                'raid': { icon: 'fas fa-rocket', text: 'Raid' },
+                'host': { icon: 'fas fa-tv', text: 'Host' }
+            };
+
+            const config = typeConfig[activity.type] || typeConfig.follow;
+            const timeString = activity.timestamp.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const amountClass = activity.isRaid ? 'activity-amount raid-viewers' : 'activity-amount';
+
+            element.innerHTML = `
+                <div class="activity-time">${timeString}</div>
+                <div class="activity-type">
+                    <div class="activity-icon ${activity.type}">
+                        <i class="${config.icon}"></i>
+                    </div>
+                    ${config.text}
+                </div>
+                <div class="activity-user">${escapeHtml(activity.user)}</div>
+                ${activity.message ? `<div class="activity-message">${escapeHtml(activity.message)}</div>` : ''}
+                ${activity.amount ? `<div class="${amountClass}">${escapeHtml(activity.amount)}</div>` : ''}
+            `;
+
+            return element;
+        }
+
+        function toggleMarkNew() {
+            markingNewMode = !markingNewMode;
+            
+            if (markingNewMode) {
+                markNewBtn.classList.add('active');
+                markNewBtn.innerHTML = '<i class="fas fa-flag"></i> Stop';
+                newActivities = [];
+                console.log('Marking started');
+            } else {
+                markNewBtn.classList.remove('active');
+                markNewBtn.innerHTML = '<i class="fas fa-flag"></i> Mark New';
+                console.log('Marking ended, jumping to oldest new activity');
+                
+                if (newActivities.length > 0) {
+                    const firstNew = newActivities[newActivities.length - 1];
+                    firstNew.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    firstNew.style.background = 'rgba(255, 193, 7, 0.3)';
+                    setTimeout(() => {
+                        firstNew.style.background = '';
+                    }, 2000);
+                    
+                    console.log(`Jumping to oldest activity of ${newActivities.length} new ones`);
+                }
+            }
+        }
+
+        function updateStatus(status, message) {
+            statusIndicator.className = `status-indicator ${status}`;
+            statusIndicator.textContent = message;
+        }
+
+        function updateLastUpdate() {
+            lastUpdateTime = new Date();
+            const timeString = lastUpdateTime.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            lastUpdateIndicator.textContent = timeString;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function playNotificationSound(type) {
+            if (isMuted) return; // Don't play sound if muted
+            
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                const frequencies = {
+                    donation: 800,
+                    subscription: 600,
+                    follow: 400,
+                    cheer: 700,
+                    raid: 500,
+                    host: 450
+                };
+                
+                oscillator.frequency.value = frequencies[type] || 400;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                // Ignore audio errors
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            setCookie('soundMuted', isMuted.toString(), 30);
+            updateMuteButton();
+        }
+
+        function updateMuteButton() {
+            if (isMuted) {
+                muteBtn.classList.add('active');
+                muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i> Muted';
+            } else {
+                muteBtn.classList.remove('active');
+                muteBtn.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
+            }
+        }
+
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+        }
+
+        function clearFeed() {
+            activityFeed.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-coffee"></i>
+                    <p>Feed cleared</p>
+                    <small>Waiting for events</small>
+                </div>
+            `;
+            newActivities = [];
+            updateLastUpdate();
+        }
+
+        // Initialization
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Popout Activity Feed started');
+            
+            // Load configuration from cookies
+            if (loadConfiguration()) {
+                // Configuration found, connect
+                connectToStreamElements();
+            }
+            // If no configuration, warning is already shown
+        });
+
+        // Auto-reconnect check
+        setInterval(function() {
+            if (!socket || socket.readyState === WebSocket.CLOSED) {
+                if (!isConnecting && CONFIG.autoReconnect && reconnectAttempts < CONFIG.maxReconnectAttempts) {
+                    connectToStreamElements();
+                }
+            }
+        }, 10000);
+
+        // Reconnect when page becomes visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && socket && socket.readyState === WebSocket.CLOSED) {
+                connectToStreamElements();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabz Stream Activity Feed</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            --accent-gradient: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.2);
+            --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-heavy: 0 12px 40px rgba(0, 0, 0, 0.4);
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 20px;
+            --spacing-xl: 24px;
+            --spacing-2xl: 40px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-full: 50%;
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+            padding: var(--spacing-lg);
+        }
+
+        .background-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image:
+                radial-gradient(circle at 25% 25%, #ffffff 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, #ffffff 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        .nav {
+            position: fixed;
+            top: var(--spacing-lg);
+            left: var(--spacing-lg);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .nav-button, .popout-button {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-light);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            cursor: pointer;
+            border: none;
+        }
+
+        .nav-button:hover, .popout-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .popout-button {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .popout-button:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.5) 0%, rgba(118, 75, 162, 0.3) 100%);
+        }
+
+        .container {
+            max-width: 450px;
+            margin: 0 auto;
+            padding-left: 80px;
+        }
+
+        .activity-header {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .activity-header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: var(--spacing-xs);
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .activity-header p {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+
+        .status-indicator {
+            position: fixed;
+            top: var(--spacing-lg);
+            right: var(--spacing-lg);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-lg);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            transition: all var(--transition-normal);
+            z-index: 100;
+        }
+
+        .status-indicator.connected {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.3) 0%, rgba(0, 255, 136, 0.1) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .status-indicator.disconnected {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(255, 107, 107, 0.1) 100%);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+        }
+
+        .status-indicator.setup {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.1) 100%);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .control-btn {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-sm) var(--spacing-md);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left var(--transition-slow);
+        }
+
+        .control-btn:hover::before {
+            left: 100%;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn.mark-new {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.3) 0%, rgba(255, 193, 7, 0.1) 100%);
+        }
+
+        .control-btn.mark-new.active {
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.5) 0%, rgba(255, 193, 7, 0.3) 100%);
+        }
+
+        .control-btn.mute {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.3) 0%, rgba(255, 107, 107, 0.1) 100%);
+        }
+
+        .control-btn.mute.active {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.5) 0%, rgba(255, 107, 107, 0.3) 100%);
+        }
+
+        .activity-feed {
+            max-height: 500px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255,255,255,0.3) transparent;
+            padding-right: var(--spacing-xs);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .activity-feed::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .activity-feed::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .activity-feed::-webkit-scrollbar-thumb {
+            background: rgba(255,255,255,0.3);
+            border-radius: 3px;
+        }
+
+        .activity-item {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            margin-bottom: var(--spacing-md);
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-lg);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-light);
+        }
+
+        .activity-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left var(--transition-slow);
+        }
+
+        .activity-item:hover::before {
+            left: 100%;
+        }
+
+        .activity-item:hover {
+            transform: translateY(-3px);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .activity-item.is-new::after {
+            content: 'NEW';
+            position: absolute;
+            top: var(--spacing-sm);
+            left: var(--spacing-sm);
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            color: #000;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            z-index: 2;
+        }
+
+        .activity-item.donation {
+            border-left: 4px solid #FFD700;
+        }
+
+        .activity-item.subscription {
+            border-left: 4px solid #9146FF;
+        }
+
+        .activity-item.follow {
+            border-left: 4px solid #00FF88;
+        }
+
+        .activity-item.cheer {
+            border-left: 4px solid #9146FF;
+        }
+
+        .activity-item.raid {
+            border-left: 4px solid #FF6B6B;
+        }
+
+        .activity-item.host {
+            border-left: 4px solid #FFA500;
+        }
+
+        .activity-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .activity-type {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            font-size: 12px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .activity-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+        }
+
+        .activity-icon.donation { 
+            background: linear-gradient(45deg, #FFD700, #FFA500); 
+            color: #000;
+        }
+        .activity-icon.subscription { 
+            background: linear-gradient(45deg, #9146FF, #6B46C1); 
+            color: #fff;
+        }
+        .activity-icon.follow { 
+            background: linear-gradient(45deg, #00FF88, #00D4AA); 
+            color: #000;
+        }
+        .activity-icon.cheer { 
+            background: linear-gradient(45deg, #9146FF, #6B46C1); 
+            color: #fff;
+        }
+        .activity-icon.raid { 
+            background: linear-gradient(45deg, #FF6B6B, #FF5252); 
+            color: #fff;
+        }
+        .activity-icon.host { 
+            background: linear-gradient(45deg, #FFA500, #FF8C00); 
+            color: #fff;
+        }
+
+        .activity-user {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: var(--spacing-xs);
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .activity-message {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-sm);
+            line-height: 1.4;
+        }
+
+        .activity-amount {
+            font-size: 18px;
+            font-weight: 700;
+            color: #FFD700;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .activity-amount.raid-viewers {
+            font-size: 24px;
+            color: #FF6B6B;
+            text-shadow: 0 0 15px rgba(255, 107, 107, 0.5);
+        }
+
+        .activity-time {
+            position: absolute;
+            top: var(--spacing-md);
+            right: var(--spacing-md);
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .logo-footer {
+            position: fixed;
+            bottom: 227px;
+            left: 51%;
+            transform: translateX(-50%);
+            z-index: 200;
+        }
+
+        .logo-footer img {
+            height: 80px;
+            opacity: 1.0;
+            transition: all var(--transition-normal);
+            filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+        }
+
+        .logo-footer:hover img {
+            opacity: 1.0;
+            transform: scale(1.05);
+        }
+
+        .last-update {
+            position: fixed;
+            bottom: var(--spacing-lg);
+            right: var(--spacing-lg);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            font-size: 11px;
+            color: var(--text-muted);
+            z-index: 100;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: var(--spacing-md);
+            opacity: 0.5;
+        }
+
+        .setup-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .setup-popup-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-2xl);
+            max-width: 500px;
+            text-align: center;
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .setup-popup h2 {
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--spacing-lg);
+            font-size: 24px;
+        }
+
+        .setup-popup p {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            line-height: 1.6;
+        }
+
+        .setup-popup-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+        }
+
+        .popup-btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) var(--spacing-xl);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-light);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .popup-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .popup-btn.secondary {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+        }
+
+        .made-by {
+            position: fixed;
+            bottom: var(--spacing-sm);
+            left: var(--spacing-sm);
+            font-size: 11px;
+            color: var(--text-muted);
+            opacity: 0.7;
+            transition: opacity var(--transition-normal);
+            z-index: 50;
+        }
+
+        .made-by:hover {
+            opacity: 1;
+        }
+
+        .clear-cookies-btn {
+            position: fixed;
+            top: 80px;
+            right: var(--spacing-lg);
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: none;
+        }
+
+        .clear-cookies-btn:hover {
+            background: rgba(255, 107, 107, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .clear-cookies-btn.show {
+            display: block;
+        }
+
+        .confirm-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .confirm-popup-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            max-width: 400px;
+            text-align: center;
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .confirm-popup h3 {
+            color: #ff6b6b;
+            margin-bottom: var(--spacing-md);
+            font-size: 20px;
+        }
+
+        .confirm-popup p {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            line-height: 1.6;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+        }
+
+        .confirm-btn {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            border: none;
+            font-size: 14px;
+        }
+
+        .confirm-btn.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+        }
+
+        .confirm-btn.danger:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .confirm-btn.cancel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .confirm-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .activity-item.new {
+            animation: slideInUp 0.5s ease-out, pulse 0.3s ease-out 0.5s;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .status-indicator.connecting {
+            animation: statusPulse 1.5s ease-in-out infinite;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding-left: var(--spacing-lg);
+                padding-right: var(--spacing-lg);
+            }
+
+            .nav {
+                position: relative;
+                margin-bottom: var(--spacing-lg);
+                flex-direction: row;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .status-indicator {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-bottom: var(--spacing-lg);
+                display: inline-block;
+            }
+
+            .last-update {
+                position: relative;
+                bottom: 0;
+                right: 0;
+                margin-top: var(--spacing-lg);
+                text-align: center;
+            }
+
+            .logo-footer {
+                position: relative;
+                bottom: 0;
+                left: 0;
+                transform: none;
+                margin-top: var(--spacing-lg);
+                text-align: center;
+            }
+
+            .setup-popup-content {
+                margin: var(--spacing-lg);
+                padding: var(--spacing-lg);
+            }
+
+            .setup-popup-buttons {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: var(--spacing-sm);
+            }
+
+            .activity-header h1 {
+                font-size: 24px;
+            }
+
+            .activity-item {
+                padding: var(--spacing-md);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    <!-- Made by signature -->
+    <div class="made-by">Made by @t4bzzz_</div>
+    
+    <!-- Clear cookies button -->
+    <button class="clear-cookies-btn" id="clearCookiesBtn" onclick="confirmClearCookies()">
+        <i class="fas fa-trash"></i> Clear Data
+    </button>
+    
+    <!-- Confirm popup -->
+    <div class="confirm-popup" id="confirmPopup">
+        <div class="confirm-popup-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> Clear All Data?</h3>
+            <p>This will delete your saved settings and redirect you back to the setup page.</p>
+            <div class="confirm-buttons">
+                <button class="confirm-btn danger" onclick="clearAllCookies()">
+                    <i class="fas fa-trash"></i> Yes, Clear All
+                </button>
+                <button class="confirm-btn cancel" onclick="closeConfirmPopup()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Setup Required Popup -->
+    <div class="setup-popup" id="setupPopup" style="display: none;">
+        <div class="setup-popup-content">
+            <h2>⚠️ Setup Required</h2>
+            <p>You need to configure your StreamElements settings before using the Activity Feed.</p>
+            <p><strong>Missing:</strong> <span id="missingItems">StreamElements token and channel name</span></p>
+            <p>Go back to the main page to complete the 2-minute setup process.</p>
+            <div class="setup-popup-buttons">
+                <a href="login activity feed.html" class="popup-btn">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Setup
+                </a>
+                <button class="popup-btn secondary" onclick="closeSetupPopup()">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="nav">
+        <a href="login activity feed.html" class="nav-button">
+            <i class="fas fa-arrow-left"></i>
+            Back
+        </a>
+        <button class="popout-button" onclick="openPopout()">
+            <i class="fas fa-external-link-alt"></i>
+            Popout
+        </button>
+    </div>
+
+    <div class="status-indicator connecting" id="status">Connecting...</div>
+    
+    <div class="last-update" id="lastUpdate">Last Update: Never</div>
+    
+    <div class="logo-footer">
+        <img src="dein-logo.png" alt="Tabz Logo" id="logoImage">
+    </div>
+    
+    <div class="container">
+        <div class="activity-header">
+            <h1>Stream Activity</h1>
+            <p>Live Donations, Subs & Follows</p>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn mark-new" onclick="toggleMarkNew()" id="markNewBtn">
+                <i class="fas fa-flag"></i> Mark New
+            </button>
+            <button class="control-btn mute" onclick="toggleMute()" id="muteBtn">
+                <i class="fas fa-volume-up"></i> Sound
+            </button>
+            <button class="control-btn" onclick="clearFeed()">
+                <i class="fas fa-trash"></i> Clear Feed
+            </button>
+        </div>
+
+        <div class="activity-feed" id="activityFeed">
+            <div class="empty-state">
+                <i class="fas fa-coffee"></i>
+                <p>Waiting for stream activities...</p>
+                <small>StreamElements events will appear automatically</small>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let CONFIG = {
+            streamElementsToken: '',
+            twitchChannel: '',
+            maxActivities: 50,
+            autoReconnect: true,
+            reconnectDelay: 3000,
+            maxReconnectAttempts: 10
+        };
+
+        let socket = null;
+        let isConnecting = false;
+        let reconnectAttempts = 0;
+        let lastUpdateTime = null;
+        let markingNewMode = false;
+        let newActivities = [];
+        let lastEventId = null;
+        let isMuted = false;
+        
+        const activityFeed = document.getElementById('activityFeed');
+        const statusIndicator = document.getElementById('status');
+        const lastUpdateIndicator = document.getElementById('lastUpdate');
+        const markNewBtn = document.getElementById('markNewBtn');
+        const muteBtn = document.getElementById('muteBtn');
+
+        // Cookie utilities
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function loadConfiguration() {
+            const token = getCookie('streamElementsToken');
+            const channel = getCookie('twitchChannel');
+
+            let missingItems = [];
+            if (!token) missingItems.push('StreamElements token');
+            if (!channel) missingItems.push('channel name');
+
+            if (missingItems.length > 0) {
+                document.getElementById('missingItems').textContent = missingItems.join(' and ');
+                showSetupPopup();
+                return false;
+            }
+
+            CONFIG.streamElementsToken = token;
+            CONFIG.twitchChannel = channel;
+            
+            // Load mute status
+            const muteStatus = getCookie('soundMuted');
+            isMuted = muteStatus === 'true';
+            updateMuteButton();
+            
+            // Show clear cookies button
+            document.getElementById('clearCookiesBtn').classList.add('show');
+            
+            // Update header with channel name
+            document.querySelector('.activity-header p').textContent = `Live • ${channel}`;
+            return true;
+        }
+
+        function showSetupPopup() {
+            document.getElementById('setupPopup').style.display = 'flex';
+            updateStatus('setup', 'Setup Required');
+        }
+
+        function closeSetupPopup() {
+            document.getElementById('setupPopup').style.display = 'none';
+            // Redirect to setup page after closing popup
+            setTimeout(() => {
+                window.location.href = 'login activity feed.html';
+            }, 500);
+        }
+
+        function connectToStreamElements() {
+            if (isConnecting) return;
+            
+            if (!CONFIG.streamElementsToken || !CONFIG.twitchChannel) {
+                updateStatus('setup', 'Configuration missing');
+                showSetupPopup();
+                return;
+            }
+            
+            isConnecting = true;
+            updateStatus('connecting', 'Connecting to StreamElements...');
+
+            try {
+                const socketUrl = `wss://realtime.streamelements.com/socket.io/?EIO=3&transport=websocket&t=${Date.now()}`;
+                socket = new WebSocket(socketUrl);
+                
+                let heartbeatInterval;
+                
+                socket.onopen = function() {
+                    console.log('Connected to StreamElements');
+                    isConnecting = false;
+                    reconnectAttempts = 0;
+                    updateStatus('connected', 'StreamElements Connected');
+                    updateLastUpdate();
+                    
+                    heartbeatInterval = setInterval(() => {
+                        if (socket && socket.readyState === WebSocket.OPEN) {
+                            socket.send('2');
+                        }
+                    }, 25000);
+                    
+                    const authMessage = `420["authenticate",{"method":"jwt","token":"${CONFIG.streamElementsToken}"}]`;
+                    socket.send(authMessage);
+                    
+                    setTimeout(() => {
+                        const joinMessage = `421["join-channel",{"channel":"${CONFIG.twitchChannel}"}]`;
+                        socket.send(joinMessage);
+                    }, 1000);
+                };
+
+                socket.onmessage = function(event) {
+                    const data = event.data;
+                    
+                    if (data.startsWith('42') && data.includes('event')) {
+                        try {
+                            const jsonData = data.substring(2);
+                            const parsedData = JSON.parse(jsonData);
+                            
+                            if (parsedData[0] === 'event' && parsedData[1]) {
+                                handleStreamElementsEvent(parsedData[1]);
+                                updateLastUpdate();
+                            }
+                        } catch (e) {
+                            console.warn('Error parsing message:', e);
+                        }
+                    }
+                    
+                    if (data === '3') {
+                        console.log('Heartbeat OK');
+                    }
+                };
+
+                socket.onclose = function(event) {
+                    console.log('StreamElements connection closed:', event.code, event.reason);
+                    isConnecting = false;
+                    clearInterval(heartbeatInterval);
+                    updateStatus('disconnected', 'Connection Lost');
+                    
+                    if (CONFIG.autoReconnect && reconnectAttempts < CONFIG.maxReconnectAttempts) {
+                        reconnectAttempts++;
+                        const delay = Math.min(CONFIG.reconnectDelay * reconnectAttempts, 30000);
+                        console.log(`Reconnect attempt ${reconnectAttempts}/${CONFIG.maxReconnectAttempts} in ${delay/1000}s`);
+                        setTimeout(connectToStreamElements, delay);
+                    }
+                };
+
+                socket.onerror = function(error) {
+                    console.error('StreamElements WebSocket error:', error);
+                    isConnecting = false;
+                    updateStatus('disconnected', 'Connection Error');
+                };
+
+            } catch (error) {
+                console.error('Connection error:', error);
+                isConnecting = false;
+                updateStatus('setup', 'Setup Required');
+                showSetupPopup();
+            }
+        }
+
+        function handleStreamElementsEvent(event) {
+            console.log('StreamElements Event:', event);
+            
+            const eventData = event.data || {};
+            
+            const eventId = `${event.type}-${eventData.username || eventData.name}-${eventData.amount || ''}-${Date.now()}`;
+            if (lastEventId === eventId) {
+                console.log('Duplicate event ignored');
+                return;
+            }
+            lastEventId = eventId;
+            
+            let activity = null;
+            
+            switch(event.type) {
+                case 'tip':
+                case 'donation':
+                    activity = {
+                        type: 'donation',
+                        user: eventData.username || eventData.name || 'Anonymous',
+                        message: eventData.message || '',
+                        amount: `€${eventData.amount || '0.00'}`,
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'subscriber':
+                case 'resub':
+                    activity = {
+                        type: 'subscription',
+                        user: eventData.username || eventData.name,
+                        message: eventData.message || '',
+                        amount: eventData.tier ? `Tier ${eventData.tier}` : 'Sub',
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'follow':
+                    activity = {
+                        type: 'follow',
+                        user: eventData.username || eventData.name,
+                        message: '',
+                        amount: '',
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'cheer':
+                case 'bits':
+                    activity = {
+                        type: 'cheer',
+                        user: eventData.username || eventData.name,
+                        message: eventData.message || '',
+                        amount: `${eventData.amount || eventData.bits || '?'} Bits`,
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'host':
+                    activity = {
+                        type: 'host',
+                        user: eventData.username || eventData.name,
+                        message: '',
+                        amount: eventData.viewers ? `${eventData.viewers} Viewers` : 'Host',
+                        timestamp: new Date()
+                    };
+                    break;
+                    
+                case 'raid':
+                    const viewers = eventData.viewers || eventData.amount || eventData.raiderCount || 0;
+                    activity = {
+                        type: 'raid',
+                        user: eventData.username || eventData.name,
+                        message: '',
+                        amount: `${viewers} Raiders`,
+                        timestamp: new Date(),
+                        isRaid: true
+                    };
+                    break;
+                    
+                default:
+                    console.log('Unknown event type:', event.type, eventData);
+                    return;
+            }
+            
+            if (activity) {
+                addActivity(activity);
+            }
+        }
+
+        function addActivity(activity) {
+            const emptyState = activityFeed.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            const activityElement = createActivityElement(activity);
+            
+            if (markingNewMode) {
+                activityElement.classList.add('is-new');
+                newActivities.unshift(activityElement);
+            }
+            
+            activityFeed.insertBefore(activityElement, activityFeed.firstChild);
+            
+            playNotificationSound(activity.type);
+            
+            while (activityFeed.children.length > CONFIG.maxActivities) {
+                const lastChild = activityFeed.lastChild;
+                const index = newActivities.indexOf(lastChild);
+                if (index > -1) {
+                    newActivities.splice(index, 1);
+                }
+                activityFeed.removeChild(lastChild);
+            }
+        }
+
+        function createActivityElement(activity) {
+            const element = document.createElement('div');
+            element.className = `activity-item ${activity.type} new`;
+            
+            const typeConfig = {
+                'donation': { icon: 'fas fa-euro-sign', text: 'Donation' },
+                'subscription': { icon: 'fas fa-star', text: 'Subscription' },
+                'follow': { icon: 'fas fa-heart', text: 'Follow' },
+                'cheer': { icon: 'fas fa-gem', text: 'Cheer' },
+                'raid': { icon: 'fas fa-rocket', text: 'Raid' },
+                'host': { icon: 'fas fa-tv', text: 'Host' }
+            };
+
+            const config = typeConfig[activity.type] || typeConfig.follow;
+            const timeString = activity.timestamp.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+            const amountClass = activity.isRaid ? 'activity-amount raid-viewers' : 'activity-amount';
+
+            element.innerHTML = `
+                <div class="activity-time">${timeString}</div>
+                <div class="activity-content">
+                    <div class="activity-type">
+                        <div class="activity-icon ${activity.type}">
+                            <i class="${config.icon}"></i>
+                        </div>
+                        ${config.text}
+                    </div>
+                    <div class="activity-user">${escapeHtml(activity.user)}</div>
+                    ${activity.message ? `<div class="activity-message">${escapeHtml(activity.message)}</div>` : ''}
+                    ${activity.amount ? `<div class="${amountClass}">${escapeHtml(activity.amount)}</div>` : ''}
+                </div>
+            `;
+
+            return element;
+        }
+
+        function toggleMarkNew() {
+            markingNewMode = !markingNewMode;
+            
+            if (markingNewMode) {
+                markNewBtn.classList.add('active');
+                markNewBtn.innerHTML = '<i class="fas fa-flag"></i> Stop Marking';
+                newActivities = [];
+                console.log('Marking mode started');
+            } else {
+                markNewBtn.classList.remove('active');
+                markNewBtn.innerHTML = '<i class="fas fa-flag"></i> Mark New';
+                console.log('Marking mode ended, jumping to oldest new activity');
+                
+                if (newActivities.length > 0) {
+                    const firstNew = newActivities[newActivities.length - 1];
+                    firstNew.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    firstNew.style.background = 'rgba(255, 193, 7, 0.3)';
+                    setTimeout(() => {
+                        firstNew.style.background = '';
+                    }, 2000);
+                    
+                    console.log(`Jumping to oldest activity of ${newActivities.length} new ones`);
+                }
+            }
+        }
+
+        function updateStatus(status, message) {
+            statusIndicator.className = `status-indicator ${status}`;
+            statusIndicator.textContent = message;
+        }
+
+        function updateLastUpdate() {
+            lastUpdateTime = new Date();
+            const timeString = lastUpdateTime.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            lastUpdateIndicator.textContent = `Last Update: ${timeString}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function playNotificationSound(type) {
+            if (isMuted) return; // Don't play sound if muted
+            
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                const frequencies = {
+                    donation: 800,
+                    subscription: 600,
+                    follow: 400,
+                    cheer: 700,
+                    raid: 500,
+                    host: 450
+                };
+                
+                oscillator.frequency.value = frequencies[type] || 400;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                // Ignore audio errors
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            setCookie('soundMuted', isMuted.toString(), 30);
+            updateMuteButton();
+        }
+
+        function updateMuteButton() {
+            if (isMuted) {
+                muteBtn.classList.add('active');
+                muteBtn.innerHTML = '<i class="fas fa-volume-mute"></i> Muted';
+            } else {
+                muteBtn.classList.remove('active');
+                muteBtn.innerHTML = '<i class="fas fa-volume-up"></i> Sound';
+            }
+        }
+
+        function confirmClearCookies() {
+            // Show confirmation popup
+            document.getElementById('confirmPopup').style.display = 'flex';
+        }
+
+        function clearAllCookies() {
+            deleteCookie('streamElementsToken');
+            deleteCookie('twitchChannel');
+            deleteCookie('soundMuted');
+            
+            closeConfirmPopup();
+            
+            // Redirect to login page
+            setTimeout(() => {
+                window.location.href = 'login activity feed.html';
+            }, 500);
+        }
+
+        function closeConfirmPopup() {
+            document.getElementById('confirmPopup').style.display = 'none';
+        }
+
+        function deleteCookie(name) {
+            document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        }
+
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+        }
+
+        function clearFeed() {
+            activityFeed.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-coffee"></i>
+                    <p>Feed cleared...</p>
+                    <small>Waiting for new stream activities</small>
+                </div>
+            `;
+            newActivities = [];
+            updateLastUpdate();
+        }
+
+        function openPopout() {
+            const popoutUrl = 'activity-feed-popout.html';
+            const popoutWindow = window.open(
+                popoutUrl, 
+                'TabzActivityFeedPopout',
+                'width=500,height=800,scrollbars=yes,resizable=yes,toolbar=no,location=no,directories=no,status=no,menubar=no'
+            );
+            
+            if (popoutWindow) {
+                popoutWindow.focus();
+            } else {
+                const currentUrl = new URL(window.location);
+                currentUrl.searchParams.set('popout', 'true');
+                window.open(currentUrl.toString(), 'TabzActivityFeedPopout',
+                    'width=500,height=800,scrollbars=yes,resizable=yes,toolbar=no,location=no,directories=no,status=no,menubar=no'
+                );
+            }
+        }
+
+        // Initialization
+        window.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 Tabz Stream Activity Feed started');
+            
+            // Load configuration from cookies
+            if (loadConfiguration()) {
+                // Configuration found, connect
+                connectToStreamElements();
+            }
+            // If no configuration, popup is already shown by loadConfiguration()
+        });
+
+        // Auto-reconnect check
+        setInterval(function() {
+            if (!socket || socket.readyState === WebSocket.CLOSED) {
+                if (!isConnecting && CONFIG.autoReconnect && reconnectAttempts < CONFIG.maxReconnectAttempts) {
+                    console.log('Auto-reconnect triggered...');
+                    connectToStreamElements();
+                }
+            }
+        }, 15000);
+
+        // Reconnect when page becomes visible
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden && socket && socket.readyState === WebSocket.CLOSED) {
+                console.log('Page visible again - attempting reconnect');
+                connectToStreamElements();
+            }
+        });
+    </script>
+</body>
+</html>

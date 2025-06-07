@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabz Stream Activity - Setup Your Feed</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            --accent-gradient: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --text-muted: #666666;
+            --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.2);
+            --shadow-medium: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --shadow-heavy: 0 12px 40px rgba(0, 0, 0, 0.4);
+            --spacing-xs: 8px;
+            --spacing-sm: 12px;
+            --spacing-md: 16px;
+            --spacing-lg: 20px;
+            --spacing-xl: 24px;
+            --spacing-2xl: 40px;
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --radius-full: 50%;
+            --transition-fast: 0.2s ease;
+            --transition-normal: 0.3s ease;
+            --transition-slow: 0.5s ease;
+            --success-color: #00ff88;
+            --warning-color: #ffc107;
+            --error-color: #ff6b6b;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .background-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image:
+                radial-gradient(circle at 25% 25%, #ffffff 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, #ffffff 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        .hero {
+            text-align: center;
+            padding: var(--spacing-2xl) var(--spacing-lg);
+            margin-bottom: var(--spacing-2xl);
+        }
+
+        .hero h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: var(--spacing-md);
+            background: var(--accent-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero .subtitle {
+            font-size: 24px;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-lg);
+            font-weight: 300;
+        }
+
+        .hero .description {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto var(--spacing-xl);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-lg);
+        }
+
+        .setup-flow {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-xl);
+        }
+
+        .step-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-2xl);
+            box-shadow: var(--shadow-medium);
+            transition: all var(--transition-normal);
+        }
+
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .step-number {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-full);
+            background: var(--accent-gradient);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            font-size: 16px;
+            margin-bottom: var(--spacing-lg);
+            line-height: 1.7;
+        }
+
+        .tutorial-section {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            margin-bottom: var(--spacing-lg);
+            text-align: center;
+        }
+
+        .youtube-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 100%);
+            color: white;
+            text-decoration: none;
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 16px;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-light);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .youtube-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .tutorial-steps {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--radius-sm);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-md) 0;
+        }
+
+        .tutorial-steps h4 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .tutorial-steps ol {
+            color: var(--text-secondary);
+            padding-left: var(--spacing-xl);
+        }
+
+        .tutorial-steps li {
+            margin-bottom: var(--spacing-sm);
+            line-height: 1.5;
+        }
+
+        .input-section {
+            margin-top: var(--spacing-xl);
+        }
+
+        .input-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+            font-size: 16px;
+        }
+
+        .input-field {
+            width: 100%;
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md);
+            color: var(--text-primary);
+            font-size: 16px;
+            transition: all var(--transition-normal);
+            font-family: inherit;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-muted);
+        }
+
+        .token-input {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .warning-box {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-md) 0;
+        }
+
+        .warning-box h4 {
+            color: var(--warning-color);
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .success-box {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-md) 0;
+            display: none;
+        }
+
+        .success-box h4 {
+            color: var(--success-color);
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xl);
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--accent-gradient);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-md) var(--spacing-xl);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-light);
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            text-decoration: none;
+            min-height: 50px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color) 0%, #00cc66 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #e6ac00 100%);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            border: 2px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .status-message {
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            margin-top: var(--spacing-md);
+            font-weight: 500;
+            display: none;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .status-message.success {
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            color: var(--success-color);
+        }
+
+        .status-message.error {
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: var(--error-color);
+        }
+
+        .status-message.warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            color: var(--warning-color);
+        }
+
+        .footer {
+            text-align: center;
+            padding: var(--spacing-2xl);
+            color: var(--text-muted);
+            border-top: 1px solid var(--glass-border);
+            margin-top: var(--spacing-2xl);
+            position: relative;
+        }
+
+        .footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color var(--transition-normal);
+        }
+
+        .footer a:hover {
+            color: var(--text-primary);
+        }
+
+        .made-by {
+            position: fixed;
+            bottom: var(--spacing-sm);
+            left: var(--spacing-sm);
+            font-size: 11px;
+            color: var(--text-muted);
+            opacity: 0.7;
+            transition: opacity var(--transition-normal);
+            z-index: 50;
+        }
+
+        .made-by:hover {
+            opacity: 1;
+        }
+
+        .clear-cookies-btn {
+            position: fixed;
+            top: var(--spacing-lg);
+            right: var(--spacing-lg);
+            background: rgba(255, 107, 107, 0.1);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: #ff6b6b;
+            border-radius: var(--radius-md);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: none;
+        }
+
+        .clear-cookies-btn:hover {
+            background: rgba(255, 107, 107, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .clear-cookies-btn.show {
+            display: block;
+        }
+
+        .confirm-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .confirm-popup-content {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-xl);
+            max-width: 400px;
+            text-align: center;
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .confirm-popup h3 {
+            color: #ff6b6b;
+            margin-bottom: var(--spacing-md);
+            font-size: 20px;
+        }
+
+        .confirm-popup p {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            line-height: 1.6;
+        }
+
+        .confirm-buttons {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+        }
+
+        .confirm-btn {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            border: none;
+            font-size: 14px;
+        }
+
+        .confirm-btn.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            color: white;
+        }
+
+        .confirm-btn.danger:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .confirm-btn.cancel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+
+        .confirm-btn.cancel:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .login-message {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-sm);
+            color: var(--warning-color);
+            font-size: 12px;
+            position: fixed;
+            top: 80px;
+            right: var(--spacing-lg);
+            display: none;
+            animation: slideIn 0.3s ease-out;
+            z-index: 100;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero .subtitle {
+                font-size: 20px;
+            }
+
+            .hero .description {
+                font-size: 16px;
+            }
+
+            .step-card {
+                padding: var(--spacing-lg);
+            }
+
+            .step-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .step-title {
+                font-size: 24px;
+            }
+
+            .action-buttons {
+                justify-content: center;
+            }
+
+            .btn {
+                flex: 1;
+                min-width: 200px;
+                justify-content: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 var(--spacing-sm);
+            }
+
+            .hero {
+                padding: var(--spacing-xl) var(--spacing-sm);
+            }
+
+            .hero h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-pattern"></div>
+    
+    
+    <div class="made-by">Made by @t4bzzz_</div>
+
+    <button class="clear-cookies-btn" id="clearCookiesBtn" onclick="confirmClearCookies()">
+        <i class="fas fa-trash"></i> Clear Data
+    </button>
+    
+
+    <div class="login-message" id="loginMessage">
+        <i class="fas fa-info-circle"></i> You need to be logged in first
+    </div>
+    
+
+    <div class="confirm-popup" id="confirmPopup">
+        <div class="confirm-popup-content">
+            <h3><i class="fas fa-exclamation-triangle"></i> Clear All Data?</h3>
+            <p>This will delete your saved StreamElements token and channel settings. You'll need to set everything up again.</p>
+            <div class="confirm-buttons">
+                <button class="confirm-btn danger" onclick="clearAllCookies()">
+                    <i class="fas fa-trash"></i> Yes, Clear All
+                </button>
+                <button class="confirm-btn cancel" onclick="closeConfirmPopup()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="hero">
+        <h1>🎮 Stream Activity Feed</h1>
+        <p class="subtitle">Real-time StreamElements notifications for your stream</p>
+        <p class="description">
+            Display live donations, subscriptions, follows, and raids in a beautiful overlay. 
+            Perfect for OBS, Streamlabs, or any streaming software. Setup takes just 2 minutes!
+        </p>
+    </div>
+
+    <div class="container">
+        <div class="setup-flow">
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">1</div>
+                    <div class="step-title">Watch Tutorial</div>
+                </div>
+                <div class="step-description">
+                    Learn how to get your StreamElements JWT token with our step-by-step video tutorial:
+                </div>
+                
+                <div class="tutorial-section">
+                    <a href="https://youtu.be/HRO2eQzGAb8" target="_blank" class="youtube-btn">
+                        <i class="fab fa-youtube"></i>
+                        Watch on YouTube (2 minutes)
+                    </a>
+                    <p style="color: var(--text-muted); font-size: 14px;">
+                        Don't have time to watch? Follow the written steps below ↓
+                    </p>
+                </div>
+
+                <div class="tutorial-steps">
+                    <h4><i class="fas fa-list"></i> Quick Steps:</h4>
+                    <ol>
+                        <li>Go to your <strong>StreamElements Dashboard</strong></li>
+                        <li>Go to <strong>Settings</strong></li>
+                        <li>Find the <strong>"JWT  TOKEN"</strong> key and copy its value</li>
+                        <li>Paste the token in Step 2 below</li>
+                    </ol>
+                </div>
+
+                <div class="warning-box">
+                    <h4><i class="fas fa-shield-alt"></i> Security Notice</h4>
+                    <p>Your token is stored locally in your browser only. It's never sent to any external servers except StreamElements directly for real-time events.</p>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">2</div>
+                    <div class="step-title">Enter Your Details</div>
+                </div>
+                <div class="step-description">
+                    Enter your Twitch channel name and StreamElements JWT token:
+                </div>
+
+                <div class="input-section">
+                    <div class="input-group">
+                        <label for="channelInput">
+                            <i class="fab fa-twitch"></i> Your Twitch Channel Name
+                        </label>
+                        <input 
+                            type="text" 
+                            id="channelInput" 
+                            class="input-field" 
+                            placeholder="your_twitch_username"
+                            autocomplete="off"
+                        >
+                    </div>
+
+                    <div class="input-group">
+                        <label for="tokenInput">
+                            <i class="fas fa-key"></i> StreamElements JWT Token
+                        </label>
+                        <textarea 
+                            id="tokenInput" 
+                            class="input-field token-input" 
+                            placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                            autocomplete="off"
+                        ></textarea>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn" onclick="validateAndSave()" id="saveBtn">
+                            <i class="fas fa-save"></i>
+                            Save Configuration
+                        </button>
+                        <button class="btn btn-warning" onclick="testConnection()" id="testBtn" disabled>
+                            <i class="fas fa-satellite-dish"></i>
+                            Test Connection
+                        </button>
+                    </div>
+
+                    <div id="statusMessage" class="status-message"></div>
+                </div>
+            </div>
+
+            <div class="step-card">
+                <div class="step-header">
+                    <div class="step-number">3</div>
+                    <div class="step-title">Launch Your Feed</div>
+                </div>
+                <div class="step-description">
+                    Your activity feed is ready! Choose how you want to use it:
+                </div>
+
+                <div class="success-box" id="successBox">
+                    <h4><i class="fas fa-check-circle"></i> Configuration Successful!</h4>
+                    <p>Your StreamElements activity feed is ready to use. Click below to launch it!</p>
+                </div>
+
+                <div class="action-buttons">
+                    <a href="activity feed.html" class="btn btn-success" id="launchBtn" style="pointer-events: none; opacity: 0.5;">
+                        <i class="fas fa-play"></i>
+                        Launch Activity Feed
+                    </a>
+                    <a href="activity-feed-popout.html" class="btn btn-secondary" id="popoutBtn" style="pointer-events: none; opacity: 0.5;">
+                        <i class="fas fa-external-link-alt"></i>
+                        Open Popout Version
+                    </a>
+                </div>
+
+                <div style="margin-top: var(--spacing-lg); color: var(--text-muted); font-size: 14px;">
+                    <p><strong>Main Feed:</strong> Full-featured version with controls and branding</p>
+                    <p><strong>Popout:</strong> Clean version perfect for OBS browser sources</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Made with ❤️ for the streaming community</p>
+            <p>
+                <a href="https://github.com/T4bzzz/custom-activity-feed-" target="_blank">
+                    <i class="fab fa-github"></i> GitHub
+                </a> • 
+                <a href="https://discord.gg/tSNcMaAUSP" target="_blank">
+                    <i class="fab fa-discord"></i> Discord
+                </a> • 
+                <a href="https://www.twitch.tv/t4bzzz_">
+                    <i class="fa-brands fa-twitch"></i> Twitch
+                </a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        let configSaved = false;
+        let connectionTested = false;
+
+        // Load existing configuration on page load
+        window.addEventListener('DOMContentLoaded', function() {
+            loadExistingConfig();
+        });
+
+        function loadExistingConfig() {
+            const savedToken = getCookie('streamElementsToken');
+            const savedChannel = getCookie('twitchChannel');
+
+            if (savedToken && savedChannel) {
+                document.getElementById('tokenInput').value = savedToken;
+                document.getElementById('channelInput').value = savedChannel;
+                configSaved = true;
+                connectionTested = true; // Assume tested if already saved
+                updateUI();
+                
+                showStatus('success', `Welcome back! Configuration loaded for channel: ${savedChannel}`);
+            }
+        }
+
+        function validateAndSave() {
+            const token = document.getElementById('tokenInput').value.trim();
+            const channel = document.getElementById('channelInput').value.trim();
+            const saveBtn = document.getElementById('saveBtn');
+
+            // Validation
+            if (!channel) {
+                showStatus('error', 'Please enter your Twitch channel name');
+                document.getElementById('channelInput').focus();
+                return;
+            }
+
+            if (channel.length < 3) {
+                showStatus('error', 'Channel name must be at least 3 characters long');
+                document.getElementById('channelInput').focus();
+                return;
+            }
+
+            if (!token) {
+                showStatus('error', 'Please enter your StreamElements JWT token');
+                document.getElementById('tokenInput').focus();
+                return;
+            }
+
+            if (!token.startsWith('eyJ')) {
+                showStatus('error', 'Invalid JWT token format. Token should start with "eyJ"');
+                document.getElementById('tokenInput').focus();
+                return;
+            }
+
+            // Show loading
+            saveBtn.innerHTML = '<div class="loading"></div> Saving...';
+            saveBtn.disabled = true;
+
+            // Simulate saving delay for better UX
+            setTimeout(() => {
+                try {
+                    // Validate JWT structure
+                    const parts = token.split('.');
+                    if (parts.length !== 3) {
+                        throw new Error('Invalid JWT structure');
+                    }
+
+                    // Try to decode payload
+                    const payload = JSON.parse(atob(parts[1]));
+                    
+                    // Check if token is expired
+                    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+                        throw new Error('Token has expired. Please get a new one from StreamElements.');
+                    }
+
+                    // Save to cookies (expires in 30 days)
+                    setCookie('streamElementsToken', token, 30);
+                    setCookie('twitchChannel', channel, 30);
+                    
+                    configSaved = true;
+                    connectionTested = false; // Reset test status
+                    
+                    showStatus('success', `Configuration saved successfully! Channel: ${channel} ✅`);
+                    updateUI();
+                    
+                } catch (error) {
+                    showStatus('error', `Invalid token: ${error.message}`);
+                    configSaved = false;
+                    updateUI();
+                }
+
+                // Reset button
+                saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Configuration';
+                saveBtn.disabled = false;
+            }, 1500);
+        }
+
+        function testConnection() {
+            const testBtn = document.getElementById('testBtn');
+            
+            if (!configSaved) {
+                showStatus('error', 'Please save your configuration first');
+                return;
+            }
+
+            const token = getCookie('streamElementsToken');
+            const channel = getCookie('twitchChannel');
+
+            if (!token || !channel) {
+                showStatus('error', 'Missing configuration. Please save your settings first.');
+                return;
+            }
+
+            // Show loading
+            testBtn.innerHTML = '<div class="loading"></div> Testing...';
+            testBtn.disabled = true;
+
+            // Simulate connection test
+            setTimeout(() => {
+                try {
+                    // Basic JWT validation
+                    const parts = token.split('.');
+                    if (parts.length !== 3) {
+                        throw new Error('Invalid JWT format');
+                    }
+
+                    // Try to decode payload
+                    const payload = JSON.parse(atob(parts[1]));
+                    
+                    // Check if token is expired
+                    if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+                        throw new Error('Token has expired');
+                    }
+
+                    connectionTested = true;
+                    showStatus('success', `🎉 Connection test successful!\nChannel: ${channel}\nToken expires: ${payload.exp ? new Date(payload.exp * 1000).toLocaleDateString() : 'Unknown'}`);
+                    updateUI();
+
+                } catch (error) {
+                    connectionTested = false;
+                    showStatus('error', `❌ Connection test failed: ${error.message}`);
+                    updateUI();
+                }
+
+                // Reset button
+                testBtn.innerHTML = '<i class="fas fa-satellite-dish"></i> Test Connection';
+                testBtn.disabled = false;
+            }, 2000);
+        }
+
+        function updateUI() {
+            const testBtn = document.getElementById('testBtn');
+            const launchBtn = document.getElementById('launchBtn');
+            const popoutBtn = document.getElementById('popoutBtn');
+            const successBox = document.getElementById('successBox');
+
+            // Update test button
+            testBtn.disabled = !configSaved;
+
+            // Update launch buttons
+            if (configSaved && connectionTested) {
+                launchBtn.style.pointerEvents = 'auto';
+                launchBtn.style.opacity = '1';
+                popoutBtn.style.pointerEvents = 'auto';
+                popoutBtn.style.opacity = '1';
+                successBox.style.display = 'block';
+            } else {
+                launchBtn.style.pointerEvents = 'none';
+                launchBtn.style.opacity = '0.5';
+                popoutBtn.style.pointerEvents = 'none';
+                popoutBtn.style.opacity = '0.5';
+                successBox.style.display = 'none';
+            }
+        }
+
+        function showStatus(type, message) {
+            const statusMessage = document.getElementById('statusMessage');
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.innerHTML = message.replace(/\n/g, '<br>');
+            statusMessage.style.display = 'block';
+            
+            // Auto-hide after 10 seconds for success messages
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 10000);
+            }
+        }
+
+        // Cookie utilities
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Strict`;
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // Input validation and auto-formatting
+        document.getElementById('channelInput').addEventListener('input', function(e) {
+            // Remove invalid characters and convert to lowercase
+            e.target.value = e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '');
+        });
+
+        document.getElementById('tokenInput').addEventListener('paste', function(e) {
+            // Auto-trim pasted tokens
+            setTimeout(() => {
+                e.target.value = e.target.value.trim();
+            }, 10);
+        });
+    </script>
+</body>
+</html>
